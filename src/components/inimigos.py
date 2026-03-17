@@ -13,14 +13,15 @@ class MeteoroNormal(Sprite):
         super().__init__()
         self.vida = hp
         self._get_pontos = get_pontos
-        self._image_normal, self._image_rachado = self._gerar_imagens()
+        self._image_normal = self._gerar_imagem()
+        self._image_rachado = self._image_normal.copy()
         self._image_base = self._image_normal
         self.image = self._image_base
         self.angulo = random.randint(0, 360)
         self.vel_rotacao = random.uniform(-2.5, 2.5)
         self.reset_pos()
 
-    def _gerar_imagens(self):
+    def _gerar_imagem(self):
         tamanho = 50
         surf = pygame.Surface((tamanho, tamanho), pygame.SRCALPHA)
         cx, cy = tamanho // 2, tamanho // 2
@@ -37,23 +38,22 @@ class MeteoroNormal(Sprite):
             cx2 = cx + random.randint(-8, 8)
             cy2 = cy + random.randint(-8, 8)
             pygame.draw.circle(surf, (self.tom - 25, self.tom - 25, self.tom - 25), (cx2, cy2), random.randint(2, 5))
+        return surf
 
-        surf_rachado = surf.copy()
-        for _ in range(random.randint(4, 6)):
+    def atualizar_visual(self):
+        cx, cy = 25, 25
+        for _ in range(random.randint(2, 3)):
             ang = random.uniform(0, 2 * math.pi)
-            x, y = float(cx), float(cy)
+            x = cx + random.uniform(-13, 13)
+            y = cy + random.uniform(-13, 13)
             pts_crack = [(int(x), int(y))]
             for _ in range(random.randint(3, 5)):
                 ang += random.uniform(-0.5, 0.5)
                 x += math.cos(ang) * random.uniform(3, 7)
                 y += math.sin(ang) * random.uniform(3, 7)
                 pts_crack.append((int(x), int(y)))
-            pygame.draw.lines(surf_rachado, (0, 0, 0), False, pts_crack, 1)
-            pygame.draw.lines(surf_rachado, (0, 0, 0), False, pts_crack, 2)
-
-        return surf, surf_rachado
-
-    def atualizar_visual(self):
+            pygame.draw.lines(self._image_rachado, (0, 0, 0), False, pts_crack, 1)
+            pygame.draw.lines(self._image_rachado, (0, 0, 0), False, pts_crack, 2)
         self._image_base = self._image_rachado
 
     def reset_pos(self):
@@ -135,14 +135,15 @@ class MeteoroEspecial(Sprite):
         super().__init__()
         self.vida = hp
         self._get_pontos = get_pontos
-        self._image_normal, self._image_rachado = self._gerar_imagens()
+        self._image_normal = self._gerar_imagem()
+        self._image_rachado = self._image_normal.copy()
         self._image_base = self._image_normal
         self.image = self._image_base
         self.angulo = random.randint(0, 360)
         self.vel_rotacao = random.uniform(-1.2, 1.2)
         self.reset_pos()
 
-    def _gerar_imagens(self):
+    def _gerar_imagem(self):
         tamanho = 200
         surf = pygame.Surface((tamanho, tamanho), pygame.SRCALPHA)
         cx, cy = tamanho // 2, tamanho // 2
@@ -159,23 +160,22 @@ class MeteoroEspecial(Sprite):
             cx2 = cx + random.randint(-25, 25)
             cy2 = cy + random.randint(-25, 25)
             pygame.draw.circle(surf, (self.tom - 25, self.tom - 25, self.tom - 25), (cx2, cy2), random.randint(5, 14))
+        return surf
 
-        surf_rachado = surf.copy()
-        for _ in range(random.randint(5, 8)):
+    def atualizar_visual(self):
+        cx, cy = 100, 100
+        for _ in range(random.randint(2, 4)):
             ang = random.uniform(0, 2 * math.pi)
-            x, y = float(cx), float(cy)
+            x = cx + random.uniform(-52, 52)
+            y = cy + random.uniform(-52, 52)
             pts_crack = [(int(x), int(y))]
             for _ in range(random.randint(4, 7)):
                 ang += random.uniform(-0.5, 0.5)
                 x += math.cos(ang) * random.uniform(10, 22)
                 y += math.sin(ang) * random.uniform(10, 22)
                 pts_crack.append((int(x), int(y)))
-            pygame.draw.lines(surf_rachado, (0, 0, 0), False, pts_crack, 2)
-            pygame.draw.lines(surf_rachado, (0, 0, 0), False, pts_crack, 4)
-
-        return surf, surf_rachado
-
-    def atualizar_visual(self):
+            pygame.draw.lines(self._image_rachado, (0, 0, 0), False, pts_crack, 2)
+            pygame.draw.lines(self._image_rachado, (0, 0, 0), False, pts_crack, 4)
         self._image_base = self._image_rachado
 
     def reset_pos(self):
