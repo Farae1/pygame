@@ -9,7 +9,7 @@ from src.core.constants import (
 from src.core.tela import Tela
 from src.components.jogador import Jogador
 from src.components.tiros import Tiro
-from src.components.inimigos import MeteoroNormal, FragmentoMeteoro, InimigoEspecial, Boss
+from src.components.inimigos import MeteoroNormal, FragmentoMeteoro, ImpactoTiro, InimigoEspecial, Boss
 
 pygame.init()
 
@@ -129,6 +129,9 @@ while rodando:
                     vitoria = True
             else:
                 inimigo.vida -= total_dano
+                if isinstance(inimigo, MeteoroNormal):
+                    for b in balas:
+                        todos_sprites.add(ImpactoTiro(b.rect.centerx, b.rect.centery))
                 if inimigo.vida <= 0:
                     if isinstance(inimigo, MeteoroNormal):
                         for _ in range(random.randint(4, 7)):
@@ -136,7 +139,7 @@ while rodando:
                             todos_sprites.add(f)
                     pontos += 35 if isinstance(inimigo, InimigoEspecial) else 10
                     inimigo.kill()
-                elif isinstance(inimigo, InimigoEspecial):
+                elif isinstance(inimigo, (MeteoroNormal, InimigoEspecial)):
                     inimigo.atualizar_visual()
 
         hits_defesa = pygame.sprite.groupcollide(grupo_tiros_inimigos, grupo_tiros, False, True)

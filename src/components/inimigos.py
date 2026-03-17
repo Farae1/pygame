@@ -13,13 +13,14 @@ class MeteoroNormal(Sprite):
         super().__init__()
         self.vida = hp
         self._get_pontos = get_pontos
-        self._image_original = self._gerar_imagem()
-        self.image = self._image_original
+        self._image_normal, self._image_rachado = self._gerar_imagens()
+        self._image_base = self._image_normal
+        self.image = self._image_base
         self.angulo = random.randint(0, 360)
         self.vel_rotacao = random.uniform(-2.5, 2.5)
         self.reset_pos()
 
-    def _gerar_imagem(self):
+    def _gerar_imagens(self):
         tamanho = 50
         surf = pygame.Surface((tamanho, tamanho), pygame.SRCALPHA)
         cx, cy = tamanho // 2, tamanho // 2
@@ -36,17 +37,34 @@ class MeteoroNormal(Sprite):
             cx2 = cx + random.randint(-8, 8)
             cy2 = cy + random.randint(-8, 8)
             pygame.draw.circle(surf, (self.tom - 25, self.tom - 25, self.tom - 25), (cx2, cy2), random.randint(2, 5))
-        return surf
+
+        surf_rachado = surf.copy()
+        for _ in range(random.randint(4, 6)):
+            ang = random.uniform(0, 2 * math.pi)
+            x, y = float(cx), float(cy)
+            pts_crack = [(int(x), int(y))]
+            for _ in range(random.randint(3, 5)):
+                ang += random.uniform(-0.5, 0.5)
+                x += math.cos(ang) * random.uniform(3, 7)
+                y += math.sin(ang) * random.uniform(3, 7)
+                pts_crack.append((int(x), int(y)))
+            pygame.draw.lines(surf_rachado, (0, 0, 0), False, pts_crack, 1)
+            pygame.draw.lines(surf_rachado, (0, 0, 0), False, pts_crack, 2)
+
+        return surf, surf_rachado
+
+    def atualizar_visual(self):
+        self._image_base = self._image_rachado
 
     def reset_pos(self):
-        self.rect = self._image_original.get_rect(center=(random.randint(25, LARGURA - 25), -60))
+        self.rect = self._image_normal.get_rect(center=(random.randint(25, LARGURA - 25), -60))
         bonus_vel = (self._get_pontos() // 200) * 0.8
         self.vel_y = random.uniform(1.5, 2.8) + bonus_vel
 
     def update(self):
         self.rect.y += self.vel_y
         self.angulo = (self.angulo + self.vel_rotacao) % 360
-        self.image = pygame.transform.rotate(self._image_original, self.angulo)
+        self.image = pygame.transform.rotate(self._image_base, self.angulo)
         self.rect = self.image.get_rect(center=self.rect.center)
         if self.rect.top > ALTURA:
             self.reset_pos()
@@ -84,6 +102,30 @@ class FragmentoMeteoro(Sprite):
         self.image = pygame.transform.rotate(self._image_original, self.angulo)
         self.image.set_alpha(self.alpha)
         self.rect = self.image.get_rect(center=self.rect.center)
+        if self.alpha <= 0:
+            self.kill()
+
+
+class ImpactoTiro(Sprite):
+    def __init__(self, x, y):
+        super().__init__()
+        self._cx = x
+        self._cy = y
+        self.raio = 5
+        self.alpha = 220
+        self._atualizar_surface()
+
+    def _atualizar_surface(self):
+        tamanho = self.raio * 2 + 2
+        self.image = pygame.Surface((tamanho, tamanho), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, (255, 210, 80), (tamanho // 2, tamanho // 2), self.raio, 2)
+        self.image.set_alpha(self.alpha)
+        self.rect = self.image.get_rect(center=(self._cx, self._cy))
+
+    def update(self):
+        self.raio += 4
+        self.alpha = max(0, self.alpha - 55)
+        self._atualizar_surface()
         if self.alpha <= 0:
             self.kill()
 
