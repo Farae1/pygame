@@ -1,0 +1,10 @@
+LARGURA, ALTURA = 600, 600
+TITULO = "Galaga: Final Battle"
+
+PRETO = (0, 0, 0)
+BRANCO = (255, 255, 255)
+VERDE = (0, 255, 0)
+VERMELHO = (255, 50, 50)
+ROXO = (150, 0, 255)
+AMARELO = (255, 255, 0)
+CINZA = (100, 100, 100)
