@@ -59,6 +59,9 @@ todos_sprites.add(player)
 SPAWN_TIMER = pygame.USEREVENT + 1
 pygame.time.set_timer(SPAWN_TIMER, 600)
 
+ultimo_tiro = 0
+COOLDOWN_TIRO = 200  
+
 rodando = True
 while rodando:
     clock.tick(60)
@@ -92,15 +95,18 @@ while rodando:
                 todos_sprites.add(novo)
                 grupo_inimigos.add(novo)
 
-            if evento.type == pygame.KEYDOWN and evento.key == pygame.K_SPACE:
-                num = (pontos // 500) + 1
-                dano_at = 2 if pontos >= 1000 else 1
-                esc_at = 1 + (0.5 * (min(pontos, 900) // 300))
-                for i in range(num):
-                    off = (i - (num - 1) / 2) * 20
-                    t = Tiro(player.rect.centerx + off, player.rect.top, dano_at, esc_at)
-                    todos_sprites.add(t)
-                    grupo_tiros.add(t)
+    if not vitoria and not game_over:
+        agora = pygame.time.get_ticks()
+        if pygame.key.get_pressed()[pygame.K_SPACE] and agora - ultimo_tiro >= COOLDOWN_TIRO:
+            ultimo_tiro = agora
+            num = (pontos // 500) + 1
+            dano_at = 2 if pontos >= 1000 else 1
+            esc_at = 1 + (0.5 * (min(pontos, 900) // 300))
+            for i in range(num):
+                off = (i - (num - 1) / 2) * 20
+                t = Tiro(player.rect.centerx + off, player.rect.top, dano_at, esc_at)
+                todos_sprites.add(t)
+                grupo_tiros.add(t)
 
     if not vitoria and not game_over:
         if pontos >= 1500 and not fase_boss:
