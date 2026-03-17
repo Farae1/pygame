@@ -130,47 +130,66 @@ class ImpactoTiro(Sprite):
             self.kill()
 
 
-class InimigoEspecial(Sprite):
-    def __init__(self, lado, cor, hp, get_pontos):
+class MeteoroEspecial(Sprite):
+    def __init__(self, hp, get_pontos):
         super().__init__()
-        self.cor_base = cor
-        self.lado = lado
         self.vida = hp
-        self.vida_max = hp
         self._get_pontos = get_pontos
-        self.image = pygame.Surface((35, 35), pygame.SRCALPHA)
-        self.atualizar_visual()
-        self.tempo_offset = random.randint(0, 1000)
+        self._image_normal, self._image_rachado = self._gerar_imagens()
+        self._image_base = self._image_normal
+        self.image = self._image_base
+        self.angulo = random.randint(0, 360)
+        self.vel_rotacao = random.uniform(-1.2, 1.2)
         self.reset_pos()
 
+    def _gerar_imagens(self):
+        tamanho = 200
+        surf = pygame.Surface((tamanho, tamanho), pygame.SRCALPHA)
+        cx, cy = tamanho // 2, tamanho // 2
+        num_pts = random.randint(9, 13)
+        pts = []
+        for i in range(num_pts):
+            ang = (2 * math.pi / num_pts) * i + random.uniform(-0.25, 0.25)
+            r = random.randint(68, 92)
+            pts.append((cx + math.cos(ang) * r, cy + math.sin(ang) * r))
+        self.tom = random.randint(70, 105)
+        pygame.draw.polygon(surf, (self.tom, self.tom, self.tom), pts)
+        pygame.draw.polygon(surf, (self.tom - 30, self.tom - 30, self.tom - 30), pts, 3)
+        for _ in range(4):
+            cx2 = cx + random.randint(-25, 25)
+            cy2 = cy + random.randint(-25, 25)
+            pygame.draw.circle(surf, (self.tom - 25, self.tom - 25, self.tom - 25), (cx2, cy2), random.randint(5, 14))
+
+        surf_rachado = surf.copy()
+        for _ in range(random.randint(5, 8)):
+            ang = random.uniform(0, 2 * math.pi)
+            x, y = float(cx), float(cy)
+            pts_crack = [(int(x), int(y))]
+            for _ in range(random.randint(4, 7)):
+                ang += random.uniform(-0.5, 0.5)
+                x += math.cos(ang) * random.uniform(10, 22)
+                y += math.sin(ang) * random.uniform(10, 22)
+                pts_crack.append((int(x), int(y)))
+            pygame.draw.lines(surf_rachado, (0, 0, 0), False, pts_crack, 2)
+            pygame.draw.lines(surf_rachado, (0, 0, 0), False, pts_crack, 4)
+
+        return surf, surf_rachado
+
     def atualizar_visual(self):
-        pct = self.vida / self.vida_max
-        cor = self.cor_base if pct > 0.7 else CINZA if pct > 0.3 else BRANCO
-        self.image.fill((0, 0, 0, 0))
-        pygame.draw.rect(self.image, cor, (0, 0, 35, 35), border_radius=8)
+        self._image_base = self._image_rachado
 
     def reset_pos(self):
-        pontos = self._get_pontos()
-        x_ini = -50 if self.lado == "esq" else LARGURA + 50
-        x_curva = 180 if self.lado == "esq" else LARGURA - 180
-        self.caminho = [(x_ini, 560), (x_curva, 240), (LARGURA / 2, 80), (random.randint(20, LARGURA - 20), 900)]
-        self.ponto_atual, self.pos = 0, pygame.math.Vector2(self.caminho[0])
-        self.rect = self.image.get_rect(center=self.pos)
-        self.vel = 5 + (pontos // 200) * 0.5
-        self.amplitude = 60 + (pontos // 350) * 15
-        self.frequencia = 0.005 + (pontos // 350) * 0.001
+        self.rect = self._image_normal.get_rect(center=(random.randint(100, LARGURA - 100), -150))
+        bonus_vel = (self._get_pontos() // 200) * 1.2
+        self.vel_y = random.uniform(2.25, 4.2) + bonus_vel
 
     def update(self):
-        alvo = pygame.math.Vector2(self.caminho[self.ponto_atual])
-        direcao = alvo - self.pos
-        if direcao.length() < self.vel:
-            self.ponto_atual += 1
-            if self.ponto_atual >= len(self.caminho):
-                self.reset_pos()
-        elif direcao.length() > 0:
-            self.pos += direcao.normalize() * self.vel
-        balanco = math.sin(pygame.time.get_ticks() * self.frequencia + self.tempo_offset) * self.amplitude
-        self.rect.center = (self.pos.x + balanco, self.pos.y)
+        self.rect.y += self.vel_y
+        self.angulo = (self.angulo + self.vel_rotacao) % 360
+        self.image = pygame.transform.rotate(self._image_base, self.angulo)
+        self.rect = self.image.get_rect(center=self.rect.center)
+        if self.rect.top > ALTURA:
+            self.reset_pos()
 
 
 class Boss(Sprite):

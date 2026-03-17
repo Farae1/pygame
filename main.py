@@ -4,12 +4,12 @@ import pygame
 
 from src.core.constants import (
     LARGURA, ALTURA,
-    PRETO, BRANCO, VERDE, VERMELHO, ROXO, AMARELO,
+    PRETO, BRANCO, VERDE, VERMELHO,
 )
 from src.core.tela import Tela
 from src.components.jogador import Jogador
 from src.components.tiros import Tiro
-from src.components.inimigos import MeteoroNormal, FragmentoMeteoro, ImpactoTiro, InimigoEspecial, Boss
+from src.components.inimigos import MeteoroNormal, MeteoroEspecial, FragmentoMeteoro, ImpactoTiro, Boss
 
 pygame.init()
 
@@ -77,19 +77,15 @@ while rodando:
             if evento.type == SPAWN_TIMER and not fase_boss:
                 sorteio = random.random()
                 hp_v = 2
-                hp_e = 3 if pontos < 1000 else 6
+                hp_e = 12
                 if pontos < 1000:
-                    if sorteio < 0.05:
-                        novo = InimigoEspecial("esq", ROXO, hp_e, get_pontos)
-                    elif sorteio < 0.10:
-                        novo = InimigoEspecial("dir", AMARELO, hp_e, get_pontos)
+                    if sorteio < 0.10:
+                        novo = MeteoroEspecial(hp_e, get_pontos)
                     else:
                         novo = MeteoroNormal(hp_v, get_pontos)
                 else:
-                    if sorteio < 0.30:
-                        novo = InimigoEspecial("esq", ROXO, hp_e, get_pontos)
-                    elif sorteio < 0.60:
-                        novo = InimigoEspecial("dir", AMARELO, hp_e, get_pontos)
+                    if sorteio < 0.60:
+                        novo = MeteoroEspecial(hp_e, get_pontos)
                     else:
                         novo = MeteoroNormal(hp_v, get_pontos)
                 todos_sprites.add(novo)
@@ -129,7 +125,7 @@ while rodando:
                     vitoria = True
             else:
                 inimigo.vida -= total_dano
-                if isinstance(inimigo, MeteoroNormal):
+                if isinstance(inimigo, (MeteoroNormal, MeteoroEspecial)):
                     for b in balas:
                         todos_sprites.add(ImpactoTiro(b.rect.centerx, b.rect.centery))
                 if inimigo.vida <= 0:
@@ -137,9 +133,9 @@ while rodando:
                         for _ in range(random.randint(4, 7)):
                             f = FragmentoMeteoro(inimigo.rect.centerx, inimigo.rect.centery, inimigo.tom)
                             todos_sprites.add(f)
-                    pontos += 35 if isinstance(inimigo, InimigoEspecial) else 10
+                    pontos += 50 if isinstance(inimigo, MeteoroEspecial) else 10
                     inimigo.kill()
-                elif isinstance(inimigo, (MeteoroNormal, InimigoEspecial)):
+                elif isinstance(inimigo, (MeteoroNormal, MeteoroEspecial)):
                     inimigo.atualizar_visual()
 
         hits_defesa = pygame.sprite.groupcollide(grupo_tiros_inimigos, grupo_tiros, False, True)
