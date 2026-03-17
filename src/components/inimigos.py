@@ -8,22 +8,45 @@ from src.core.constants import LARGURA, ALTURA, VERMELHO, CINZA, BRANCO, ROXO, A
 from src.components.tiros import TiroInimigo, LaserBoss
 
 
-class InimigoVermelho(Sprite):
+class MeteoroNormal(Sprite):
     def __init__(self, hp, get_pontos):
         super().__init__()
         self.vida = hp
         self._get_pontos = get_pontos
-        self.image = pygame.Surface((30, 30), pygame.SRCALPHA)
-        pygame.draw.rect(self.image, VERMELHO, (0, 0, 30, 30), border_radius=5)
+        self._image_original = self._gerar_imagem()
+        self.image = self._image_original
+        self.angulo = random.randint(0, 360)
+        self.vel_rotacao = random.uniform(-2.5, 2.5)
         self.reset_pos()
 
+    def _gerar_imagem(self):
+        tamanho = 34
+        surf = pygame.Surface((tamanho, tamanho), pygame.SRCALPHA)
+        cx, cy = tamanho // 2, tamanho // 2
+        num_pts = random.randint(8, 11)
+        pts = []
+        for i in range(num_pts):
+            ang = (2 * math.pi / num_pts) * i + random.uniform(-0.3, 0.3)
+            r = random.randint(11, 16)
+            pts.append((cx + math.cos(ang) * r, cy + math.sin(ang) * r))
+        tom = random.randint(80, 115)
+        pygame.draw.polygon(surf, (tom, tom, tom), pts)
+        pygame.draw.polygon(surf, (tom - 30, tom - 30, tom - 30), pts, 2)
+        cx2 = cx + random.randint(-5, 5)
+        cy2 = cy + random.randint(-5, 5)
+        pygame.draw.circle(surf, (tom - 25, tom - 25, tom - 25), (cx2, cy2), random.randint(2, 4))
+        return surf
+
     def reset_pos(self):
-        self.rect = self.image.get_rect(center=(random.randint(15, LARGURA - 15), -50))
+        self.rect = self._image_original.get_rect(center=(random.randint(15, LARGURA - 15), -50))
         bonus_vel = (self._get_pontos() // 200) * 2
         self.vel_y = random.randint(3, 5) + (bonus_vel / 5)
 
     def update(self):
         self.rect.y += self.vel_y
+        self.angulo = (self.angulo + self.vel_rotacao) % 360
+        self.image = pygame.transform.rotate(self._image_original, self.angulo)
+        self.rect = self.image.get_rect(center=self.rect.center)
         if self.rect.top > ALTURA:
             self.reset_pos()
 

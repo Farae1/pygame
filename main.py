@@ -9,7 +9,7 @@ from src.core.constants import (
 from src.core.tela import Tela
 from src.components.jogador import Jogador
 from src.components.tiros import Tiro
-from src.components.inimigos import InimigoVermelho, InimigoEspecial, Boss
+from src.components.inimigos import MeteoroNormal, InimigoEspecial, Boss
 
 pygame.init()
 
@@ -60,7 +60,7 @@ SPAWN_TIMER = pygame.USEREVENT + 1
 pygame.time.set_timer(SPAWN_TIMER, 600)
 
 ultimo_tiro = 0
-COOLDOWN_TIRO = 200  
+COOLDOWN_TIRO = 180
 
 rodando = True
 while rodando:
@@ -84,14 +84,14 @@ while rodando:
                     elif sorteio < 0.10:
                         novo = InimigoEspecial("dir", AMARELO, hp_e, get_pontos)
                     else:
-                        novo = InimigoVermelho(hp_v, get_pontos)
+                        novo = MeteoroNormal(hp_v, get_pontos)
                 else:
                     if sorteio < 0.30:
                         novo = InimigoEspecial("esq", ROXO, hp_e, get_pontos)
                     elif sorteio < 0.60:
                         novo = InimigoEspecial("dir", AMARELO, hp_e, get_pontos)
                     else:
-                        novo = InimigoVermelho(hp_v, get_pontos)
+                        novo = MeteoroNormal(hp_v, get_pontos)
                 todos_sprites.add(novo)
                 grupo_inimigos.add(novo)
 
