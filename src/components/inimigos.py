@@ -20,27 +20,28 @@ class MeteoroNormal(Sprite):
         self.reset_pos()
 
     def _gerar_imagem(self):
-        tamanho = 34
+        tamanho = 50
         surf = pygame.Surface((tamanho, tamanho), pygame.SRCALPHA)
         cx, cy = tamanho // 2, tamanho // 2
         num_pts = random.randint(8, 11)
         pts = []
         for i in range(num_pts):
             ang = (2 * math.pi / num_pts) * i + random.uniform(-0.3, 0.3)
-            r = random.randint(11, 16)
+            r = random.randint(17, 23)
             pts.append((cx + math.cos(ang) * r, cy + math.sin(ang) * r))
-        tom = random.randint(80, 115)
-        pygame.draw.polygon(surf, (tom, tom, tom), pts)
-        pygame.draw.polygon(surf, (tom - 30, tom - 30, tom - 30), pts, 2)
-        cx2 = cx + random.randint(-5, 5)
-        cy2 = cy + random.randint(-5, 5)
-        pygame.draw.circle(surf, (tom - 25, tom - 25, tom - 25), (cx2, cy2), random.randint(2, 4))
+        self.tom = random.randint(80, 115)
+        pygame.draw.polygon(surf, (self.tom, self.tom, self.tom), pts)
+        pygame.draw.polygon(surf, (self.tom - 30, self.tom - 30, self.tom - 30), pts, 2)
+        for _ in range(2):
+            cx2 = cx + random.randint(-8, 8)
+            cy2 = cy + random.randint(-8, 8)
+            pygame.draw.circle(surf, (self.tom - 25, self.tom - 25, self.tom - 25), (cx2, cy2), random.randint(2, 5))
         return surf
 
     def reset_pos(self):
-        self.rect = self._image_original.get_rect(center=(random.randint(15, LARGURA - 15), -50))
-        bonus_vel = (self._get_pontos() // 200) * 2
-        self.vel_y = random.randint(3, 5) + (bonus_vel / 5)
+        self.rect = self._image_original.get_rect(center=(random.randint(25, LARGURA - 25), -60))
+        bonus_vel = (self._get_pontos() // 200) * 0.8
+        self.vel_y = random.uniform(1.5, 2.8) + bonus_vel
 
     def update(self):
         self.rect.y += self.vel_y
@@ -49,6 +50,42 @@ class MeteoroNormal(Sprite):
         self.rect = self.image.get_rect(center=self.rect.center)
         if self.rect.top > ALTURA:
             self.reset_pos()
+
+
+class FragmentoMeteoro(Sprite):
+    def __init__(self, x, y, tom):
+        super().__init__()
+        tamanho = random.randint(8, 15)
+        surf = pygame.Surface((tamanho, tamanho), pygame.SRCALPHA)
+        cx, cy = tamanho // 2, tamanho // 2
+        num_pts = random.randint(4, 6)
+        pts = []
+        for i in range(num_pts):
+            ang = (2 * math.pi / num_pts) * i + random.uniform(-0.4, 0.4)
+            r = random.randint(3, tamanho // 2 - 1)
+            pts.append((cx + math.cos(ang) * r, cy + math.sin(ang) * r))
+        pygame.draw.polygon(surf, (tom, tom, tom), pts)
+        self._image_original = surf
+        self.image = surf.copy()
+        self.rect = self.image.get_rect(center=(x, y))
+        ang_saida = random.uniform(0, 2 * math.pi)
+        speed = random.uniform(2, 5)
+        self.vel_x = math.cos(ang_saida) * speed
+        self.vel_y = math.sin(ang_saida) * speed
+        self.alpha = 255
+        self.angulo = random.randint(0, 360)
+        self.vel_rotacao = random.uniform(-6, 6)
+
+    def update(self):
+        self.rect.x += self.vel_x
+        self.rect.y += self.vel_y
+        self.alpha = max(0, self.alpha - 7)
+        self.angulo = (self.angulo + self.vel_rotacao) % 360
+        self.image = pygame.transform.rotate(self._image_original, self.angulo)
+        self.image.set_alpha(self.alpha)
+        self.rect = self.image.get_rect(center=self.rect.center)
+        if self.alpha <= 0:
+            self.kill()
 
 
 class InimigoEspecial(Sprite):

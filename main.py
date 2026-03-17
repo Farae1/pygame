@@ -9,7 +9,7 @@ from src.core.constants import (
 from src.core.tela import Tela
 from src.components.jogador import Jogador
 from src.components.tiros import Tiro
-from src.components.inimigos import MeteoroNormal, InimigoEspecial, Boss
+from src.components.inimigos import MeteoroNormal, FragmentoMeteoro, InimigoEspecial, Boss
 
 pygame.init()
 
@@ -76,7 +76,7 @@ while rodando:
         if not vitoria and not game_over:
             if evento.type == SPAWN_TIMER and not fase_boss:
                 sorteio = random.random()
-                hp_v = 1 if pontos < 1000 else 2
+                hp_v = 2
                 hp_e = 3 if pontos < 1000 else 6
                 if pontos < 1000:
                     if sorteio < 0.05:
@@ -130,6 +130,10 @@ while rodando:
             else:
                 inimigo.vida -= total_dano
                 if inimigo.vida <= 0:
+                    if isinstance(inimigo, MeteoroNormal):
+                        for _ in range(random.randint(4, 7)):
+                            f = FragmentoMeteoro(inimigo.rect.centerx, inimigo.rect.centery, inimigo.tom)
+                            todos_sprites.add(f)
                     pontos += 35 if isinstance(inimigo, InimigoEspecial) else 10
                     inimigo.kill()
                 elif isinstance(inimigo, InimigoEspecial):
