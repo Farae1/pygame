@@ -9,10 +9,10 @@ from src.components.tiros import TiroInimigo, LaserBoss
 
 
 class MeteoroNormal(Sprite):
-    def __init__(self, hp, get_pontos):
+    def __init__(self, hp, get_horda):
         super().__init__()
         self.vida = hp
-        self._get_pontos = get_pontos
+        self._get_horda = get_horda
         self._image_normal = self._gerar_imagem()
         self._image_rachado = self._image_normal.copy()
         self._image_base = self._image_normal
@@ -58,8 +58,7 @@ class MeteoroNormal(Sprite):
 
     def reset_pos(self):
         self.rect = self._image_normal.get_rect(center=(random.randint(25, LARGURA - 25), -60))
-        bonus_vel = (self._get_pontos() // 200) * 0.8
-        self.vel_y = random.uniform(1.5, 2.8) + bonus_vel
+        self.vel_y = random.uniform(1.5, 2.8) + (self._get_horda() - 1) * 0.5
 
     def update(self):
         self.rect.y += self.vel_y
@@ -131,10 +130,10 @@ class ImpactoTiro(Sprite):
 
 
 class MeteoroEspecial(Sprite):
-    def __init__(self, hp, get_pontos):
+    def __init__(self, hp, get_horda):
         super().__init__()
         self.vida = hp
-        self._get_pontos = get_pontos
+        self._get_horda = get_horda
         self._image_normal = self._gerar_imagem()
         self._image_rachado = self._image_normal.copy()
         self._image_base = self._image_normal
@@ -180,8 +179,7 @@ class MeteoroEspecial(Sprite):
 
     def reset_pos(self):
         self.rect = self._image_normal.get_rect(center=(random.randint(100, LARGURA - 100), -150))
-        bonus_vel = (self._get_pontos() // 200) * 1.2
-        self.vel_y = random.uniform(2.25, 4.2) + bonus_vel
+        self.vel_y = random.uniform(2.25, 4.2) + (self._get_horda() - 1) * 0.75
 
     def update(self):
         self.rect.y += self.vel_y
@@ -193,9 +191,10 @@ class MeteoroEspecial(Sprite):
 
 
 class Boss(Sprite):
-    def __init__(self, todos, grupo_tiros_inimigos):
+    def __init__(self, todos, grupo_tiros_inimigos, vida=600):
         super().__init__()
-        self.vida = 600
+        self.vida = vida
+        self.vida_max = vida
         self.image_base = pygame.Surface((150, 80), pygame.SRCALPHA)
         pygame.draw.rect(self.image_base, ROXO, (0, 0, 150, 80), border_radius=15)
         pygame.draw.rect(self.image_base, AMARELO, (40, 20, 70, 40), border_radius=5)
