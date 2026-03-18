@@ -4,8 +4,11 @@ import math
 import pygame
 from pygame.sprite import Sprite
 
-from src.core.constants import LARGURA, ALTURA, VERMELHO, CINZA, BRANCO, ROXO, AMARELO, VERDE
-from src.components.tiros import TiroInimigo, LaserBoss
+from src.core.constants import (
+    LARGURA, ALTURA, VERMELHO, CINZA, BRANCO, ROXO, AMARELO, VERDE,
+    BOSS_VEL, BOSS_POS_Y_ALVO, BOSS_COOLDOWN_TIRO, BOSS_COOLDOWN_FEIXE, BOSS_PROB_LASER,
+)
+from src.components.tiros import TiroInimigo, LaserBoss, ProjetilBoss, FeixeBoss
 
 
 class MeteoroNormal(Sprite):
@@ -191,57 +194,123 @@ class MeteoroEspecial(Sprite):
 
 
 class Boss(Sprite):
+    W, H = 200, 95
+
     def __init__(self, todos, grupo_tiros_inimigos, vida=600):
         super().__init__()
         self.vida = vida
         self.vida_max = vida
-        self.image_base = pygame.Surface((150, 80), pygame.SRCALPHA)
-        pygame.draw.rect(self.image_base, ROXO, (0, 0, 150, 80), border_radius=15)
-        pygame.draw.rect(self.image_base, AMARELO, (40, 20, 70, 40), border_radius=5)
+        self.image_base = self._gerar_imagem()
         self.image = self.image_base.copy()
-        self.rect = self.image.get_rect(center=(LARGURA / 2, -100))
-        self.pos_y_alvo = 150
-        self.vel = 4
+        self.rect = self.image.get_rect(center=(LARGURA / 2, -120))
+        self.pos_y_alvo = BOSS_POS_Y_ALVO
+        self.vel = BOSS_VEL
         self.todos, self.grupo_tiros_inimigos = todos, grupo_tiros_inimigos
-        self.ultimo_bloco, self.ultimo_especial = pygame.time.get_ticks(), pygame.time.get_ticks()
+        self.ultimo_tiro = pygame.time.get_ticks()
+        self.ultimo_feixe = pygame.time.get_ticks()
         self.estado = "NORMAL"
         self.timer_estado = 0
 
+    def _gerar_imagem(self):
+        W, H = self.W, self.H
+        surf = pygame.Surface((W, H), pygame.SRCALPHA)
+        cx = W // 2
+
+        for ex in range(20, W - 10, 32):
+            pygame.draw.ellipse(surf, (40, 0, 80), (ex, H - 18, 22, 18))
+            pygame.draw.ellipse(surf, (120, 0, 200), (ex + 3, H - 14, 16, 12))
+            pygame.draw.ellipse(surf, (200, 100, 255), (ex + 6, H - 10, 10, 6))
+
+        for px, pw in ((2, 28), (W - 30, 28)):
+            pygame.draw.rect(surf, (60, 0, 100), (px, H // 2 - 14, pw, 28), border_radius=5)
+            pygame.draw.rect(surf, (130, 0, 200), (px + 3, H // 2 - 10, pw - 6, 20), border_radius=3)
+
+        for bx in (6, W - 10):
+            pygame.draw.rect(surf, (80, 0, 130), (bx, H // 2 - 3, 12, 6), border_radius=2)
+
+        hull = [
+            (cx, 4), (cx + 55, 18), (cx + 80, 35),
+            (cx + 75, H - 22), (cx + 40, H - 8), (cx, H - 4),
+            (cx - 40, H - 8), (cx - 75, H - 22), (cx - 80, 35), (cx - 55, 18),
+        ]
+        pygame.draw.polygon(surf, (55, 0, 90), hull)
+        pygame.draw.polygon(surf, (130, 0, 210), hull, 2)
+
+        pygame.draw.line(surf, (100, 0, 160), (cx - 40, 20), (cx - 60, H - 25), 1)
+        pygame.draw.line(surf, (100, 0, 160), (cx + 40, 20), (cx + 60, H - 25), 1)
+        pygame.draw.line(surf, (100, 0, 160), (cx - 20, 10), (cx - 35, H - 15), 1)
+        pygame.draw.line(surf, (100, 0, 160), (cx + 20, 10), (cx + 35, H - 15), 1)
+
+        pygame.draw.circle(surf, (160, 0, 255), (cx, H // 2 - 5), 20)
+        pygame.draw.circle(surf, (210, 80, 255), (cx, H // 2 - 5), 14)
+        pygame.draw.circle(surf, (240, 180, 255), (cx, H // 2 - 5), 7)
+
+        pygame.draw.ellipse(surf, (255, 220, 100), (cx - 12, 10, 24, 10))
+        pygame.draw.ellipse(surf, (255, 255, 180), (cx - 7, 12, 14, 6))
+
+        return surf
+
+    def _pulsar_core(self, t):
+        cx = self.W // 2
+        cy = self.H // 2 - 5
+        r = 22 + int(4 * math.sin(t * 0.006))
+        a = int(160 + 80 * math.sin(t * 0.006))
+        pygame.draw.circle(self.image, (180, 0, 255, min(255, a)), (cx, cy), r, 2)
+
+    def _atualizar_imagem(self, agora):
+        self.image = self.image_base.copy()
+        self._pulsar_core(agora)
+
+    def _disparar_tiro(self, agora):
+        for off in (-30, 0, 30):
+            orb = ProjetilBoss(self.rect.centerx + off, self.rect.bottom)
+            self.todos.add(orb)
+            self.grupo_tiros_inimigos.add(orb)
+        self.ultimo_tiro = agora
+
+    def _disparar_feixe(self, agora):
+        largura_g = LARGURA // 2
+        x_ale = random.randint(largura_g // 2, LARGURA - largura_g // 2)
+        vel_golpe = 3.5 if self.vida <= self.vida_max // 2 else 2.0
+        feixe = FeixeBoss(x_ale, self.rect.bottom + 22, largura_g, vel_golpe)
+        self.todos.add(feixe)
+        self.grupo_tiros_inimigos.add(feixe)
+        self.ultimo_feixe = agora
+
+    def _iniciar_laser(self, agora):
+        self.estado = "PREPARANDO"
+        self.timer_estado = agora + 1500
+
     def update(self):
         agora = pygame.time.get_ticks()
+
         if self.rect.centery < self.pos_y_alvo:
             self.rect.y += 2
+            self._atualizar_imagem(agora)
             return
+
+        self._atualizar_imagem(agora)
 
         if self.estado == "NORMAL":
             self.rect.x += self.vel
             if self.rect.right > LARGURA or self.rect.left < 0:
                 self.vel *= -1
-            if agora - self.ultimo_bloco > 2000:
-                bloco = TiroInimigo(self.rect.centerx, self.rect.bottom, 25, 25, VERDE, 12, 4)
-                self.todos.add(bloco)
-                self.grupo_tiros_inimigos.add(bloco)
-                self.ultimo_bloco = agora
-            if agora - self.ultimo_especial > 15000:
-                largura_g = LARGURA // 2
-                x_ale = random.randint(largura_g // 2, LARGURA - largura_g // 2)
-                vel_golpe = 3.5 if self.vida <= 300 else 1.5
-                esp = TiroInimigo(x_ale, self.rect.bottom, largura_g, 40, AMARELO, 120, vel_golpe)
-                self.todos.add(esp)
-                self.grupo_tiros_inimigos.add(esp)
-                self.ultimo_especial = agora
-            if random.random() < 0.005:
-                self.estado = "PREPARANDO"
-                self.timer_estado = agora + 1500
+            if agora - self.ultimo_tiro > BOSS_COOLDOWN_TIRO:
+                self._disparar_tiro(agora)
+            if agora - self.ultimo_feixe > BOSS_COOLDOWN_FEIXE:
+                self._disparar_feixe(agora)
+            if random.random() < BOSS_PROB_LASER:
+                self._iniciar_laser(agora)
+
         elif self.estado == "PREPARANDO":
-            alpha = 100 if (agora // 100) % 2 == 0 else 255
-            self.image.set_alpha(alpha)
+            self.image.set_alpha(100 if (agora // 100) % 2 == 0 else 255)
             if agora > self.timer_estado:
                 self.estado = "LASER"
                 self.timer_estado = agora + 1000
                 laser = LaserBoss(self.rect.x, self.rect.width)
                 self.todos.add(laser)
                 self.grupo_tiros_inimigos.add(laser)
+
         elif self.estado == "LASER":
             self.image.set_alpha(255)
             if agora > self.timer_estado:

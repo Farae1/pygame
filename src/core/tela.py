@@ -1,23 +1,54 @@
-import pygame
+LARGURA, ALTURA = 600, 600
+TITULO = "Galaga: Final Battle"
+FPS = 60
 
-from src.core.constants import LARGURA, ALTURA, TITULO
+PRETO = (0, 0, 0)
+BRANCO = (255, 255, 255)
+VERDE = (0, 255, 0)
+VERMELHO = (255, 50, 50)
+ROXO = (150, 0, 255)
+AMARELO = (255, 255, 0)
+CINZA = (100, 100, 100)
 
+PONTOS_POR_METEORO_NORMAL = 45
+PONTOS_POR_METEORO_ESPECIAL = 130
 
-class Tela:
-    def __init__(self, largura: int = LARGURA, altura: int = ALTURA):
-        self._largura = largura
-        self._altura = altura
-        self.surface = pygame.display.set_mode((largura, altura))
-        pygame.display.set_caption(TITULO)
+VIDAS_INICIAIS = 3
+INVENCIVEL_DURACAO = 5000
 
-    def preencher(self, cor):
-        self.surface.fill(cor)
+JOGADOR_VEL = 9
+TIRO_VEL = 15
+COOLDOWN_TIRO = 180
+WEAPON_MAX_LV = 3
+ARMA_PONTOS_POR_NIVEL = 500
+ARMA_PONTOS_DANO2 = 1000
+ARMA_PONTOS_ESCALA_PASSO = 300
+ARMA_PONTOS_ESCALA_MAX = 900
 
-    def desenhar(self, grupo):
-        grupo.draw(self.surface)
+FURIA_DURACAO = 5000
+FURIA_RECARGA = 10000
+FURIA_MULT = 3.5
 
-    def blit(self, surface, pos):
-        self.surface.blit(surface, pos)
+HORDAS_POR_BOSS = 3
+HORDA_DURACAO_BASE = 500
+HORDA_DURACAO_ESCALA = 0.5
+SPAWN_INTERVALO_MIN = 300
+SPAWN_INTERVALO_BASE = 1000
+SPAWN_INTERVALO_ESCALA = 0.4
 
-    def atualizar(self):
-        pygame.display.flip()
+BOSS_HP_BASE = 600
+BOSS_HP_ESCALA = 300
+BOSS_VEL = 4
+BOSS_POS_Y_ALVO = 150
+BOSS_COOLDOWN_TIRO = 1800
+BOSS_COOLDOWN_FEIXE = 12000
+BOSS_PROB_LASER = 0.004
+LASER_DURACAO = 1000
+
+METEORO_HP_BASE = 2
+METEORO_HP_ESCALA = 0.5
+METEORO_ESPECIAL_HP_BASE = 12
+METEORO_ESPECIAL_HP_ESCALA = 3
+METEORO_PROB_ESPECIAL_MAX = 0.55
+METEORO_PROB_ESPECIAL_BASE = 0.05
+METEORO_PROB_ESPECIAL_ESCALA = 0.08
